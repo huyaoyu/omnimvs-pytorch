@@ -221,7 +221,8 @@ class Dataset(torch.utils.data.Dataset):
             invdepth = self.min_invdepth + quantized_inv_index * step_invdepth
             return invdepth
         elif ext == '.tif' or ext == '.tiff':
-            return readImageFloat(path)
+            # return readImageFloat(path)
+            return readImageFloatPIL(path)
         else:
             return np.fromfile(path, dtype=np.float32)
     
@@ -267,7 +268,9 @@ class Dataset(torch.utils.data.Dataset):
                             morph_win_size=5):
         h, w = self.equirect_size
         gt_depth_file = osp.join(self.db_path, self.gt_depth_fmt % (w, fidx))
+        # import ipdb; ipdb.set_trace()
         gt = self.readInvdepth(gt_depth_file)
+        # gt = gt[0]
         gt_h = gt.shape[0]
         # crop height
         if h < gt_h:

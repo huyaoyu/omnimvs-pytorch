@@ -17,6 +17,9 @@ import skimage.transform
 from utils.common import *
 from utils.log import *
 
+# Fix the bug of skimage when reading tiff files.
+from PIL import Image
+
 ## visualize =================================
 
 def colorMap(colormap_name: str, arr: np.ndarray,
@@ -172,6 +175,47 @@ def readImageFloat(tiff_path: str, return_thumbnail = False,
                 else: return multi_image[0].squeeze(), multi_image[1].squeeze()
         else: # returns list of images
             return [im.squeeze() for im in multi_image]       
+    except Exception as e:
+        LOG_ERROR('Failed to read image float: "%s"' %(e))
+        if read_or_die:
+            traceback.print_tb(e.__traceback__)
+            sys.exit()
+        return None, None
+
+def readImageFloatPIL(tiff_path: str, return_thumbnail = False,
+                   read_or_die = True):
+    '''This is a PIL version of the original readImageFloat(). 
+    The original version fails to read a multi-frame tiff file
+    on Ubuntu 20.04 with scikit-image 0.18.1 and tifffile 2021.4.8. '''
+    try:
+        multi_image = Image.open(tiff_path)
+        num_read_images = multi_image.n_frames
+        if num_read_images == 0:
+            raise Exception('No images found in {}. '.format(tiff_path))
+        elif num_read_images == 1:
+            return np.array(multi_image), None
+        elif num_read_images == 2: # returns float, thumnail
+            multi_image.seek(0)
+            img0 = np.array(multi_image)
+
+            multi_image.seek(1)
+            img1 = np.array(multi_image)
+            
+            if img0.dtype == np.uint8 and img1.dtype == np.float32:
+                if not return_thumbnail: return img1
+                else: return img1, img0
+            elif img0.dtype == np.float32 and img1.dtype == np.uint8:
+                if not return_thumbnail: return img0
+                else: return img0, img1
+            else:
+                raise Exception('Wrong types: img0.dtype = {}, img1.dtype = {}'.format(
+                    img0.dtype, img1.dtype))
+        else: # returns list of images
+            imgs = []
+            for i in range(num_read_images):
+                multi_image.seek(i)
+                imgs.append( np.array(multi_image) )
+            return imgs
     except Exception as e:
         LOG_ERROR('Failed to read image float: "%s"' %(e))
         if read_or_die:

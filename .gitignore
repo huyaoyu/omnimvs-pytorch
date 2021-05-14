@@ -84,3 +84,6 @@ results
 devel
 logs
 ros-kinetic/src/CMakeLists.txt
+
+# Visual Studio Code.
+*.code-workspace

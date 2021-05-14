@@ -33,7 +33,8 @@ else: opts.snapshot_path = 'tiny_plus-ft.pt'
 # Dataset & sweep arguments
 if len(sys.argv) >= 3: opts.dbname = sys.argv[2]
 else: opts.dbname = 'itbt_sample'
-opts.db_root = './data'
+# opts.db_root = './data'
+opts.db_root = sys.argv[3]
 opts.data_opts = Edict()
 opts.data_opts.phi_deg = 45.0
 opts.data_opts.num_invdepth = 192
